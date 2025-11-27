@@ -16,7 +16,7 @@ export function Footer({ onNavigate }: FooterProps) {
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">A</span>
               </div>
-              <h3 className="text-xl font-bold text-white">Agile Hub</h3>
+              <h3 className="text-xl font-bold text-white">Gee-Connect</h3>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
               Your comprehensive resource for mastering Agile methodology. Learn, implement,
@@ -51,7 +51,7 @@ export function Footer({ onNavigate }: FooterProps) {
                 <Github size={20} />
               </a>
               <a
-                href="mailto:contact@agilehub.com"
+                href="mailto:contact@gee-connect.info"
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
                 aria-label="Email"
               >
@@ -128,7 +128,7 @@ export function Footer({ onNavigate }: FooterProps) {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-400 text-sm">
-              &copy; {currentYear} Agile Hub. All rights reserved.
+              &copy; {currentYear} gee-connect. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
               <a href="#" className="hover:text-white transition-colors">
