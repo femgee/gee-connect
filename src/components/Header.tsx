@@ -26,10 +26,10 @@ export function Header({ onSearchClick, currentPage, onNavigate }: HeaderProps) 
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
+              <span className="text-white font-bold text-lg">G</span>
             </div>
             <h1 className="text-xl font-bold text-gray-900">
-              Agile Hub
+              Gee-Connect
             </h1>
           </button>
 
