@@ -16,7 +16,7 @@ export function Footer({ onNavigate }: FooterProps) {
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">A</span>
               </div>
-              <h3 className="text-xl font-bold text-white">Gee-Connect</h3>
+              <h3 className="text-xl font-bold text-white">Agile Hub</h3>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
               Your comprehensive resource for mastering Agile methodology. Learn, implement,
