@@ -23,16 +23,7 @@ export function Footer({ onNavigate }: FooterProps) {
               and excel with our curated knowledge base and trending insights.
             </p>
             <div className="flex space-x-4">
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter size={20} />
-              </a>
-              <a
+                    <a
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -42,16 +33,7 @@ export function Footer({ onNavigate }: FooterProps) {
                 <Linkedin size={20} />
               </a>
               <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                aria-label="GitHub"
-              >
-                <Github size={20} />
-              </a>
-              <a
-                href="mailto:contact@gee-connect.info"
+                href="mailto:wale@agilehub.online"
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
                 aria-label="Email"
               >
@@ -128,7 +110,7 @@ export function Footer({ onNavigate }: FooterProps) {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-400 text-sm">
-              &copy; {currentYear} gee-connect. All rights reserved.
+              &copy; {currentYear} agilehub.online All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
               <a href="#" className="hover:text-white transition-colors">
