@@ -1,4 +1,4 @@
-import { Mail, Linkedin, Twitter, Github } from 'lucide-react';
+import { Mail, Linkedin } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (page: string) => void;
