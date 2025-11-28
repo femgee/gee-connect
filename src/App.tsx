@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Header } from './components/Header';
+import { ScrollToTop } from './components/ScrollToTop';
 import { Home } from './pages/Home';
 import { About } from './pages/About';
 import { KnowledgeBase } from './pages/KnowledgeBase';
 import { Blogs } from './pages/Blogs';
+import { Admin } from './pages/Admin';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -31,6 +33,8 @@ function App() {
         );
       case 'blogs':
         return <Blogs onNavigate={handleNavigate} />;
+      case 'admin':
+        return <Admin onNavigate={handleNavigate} />;
       default:
         return <Home onNavigate={handleNavigate} />;
     }
@@ -44,6 +48,7 @@ function App() {
         onNavigate={handleNavigate}
       />
       {renderPage()}
+      <ScrollToTop />
     </div>
   );
 }
