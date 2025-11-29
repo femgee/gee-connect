@@ -17,6 +17,28 @@ export function Blogs({ onNavigate }: BlogsProps) {
 
   useEffect(() => {
     loadBlogs();
+
+    // Set up real-time subscription for blogs
+    const blogsChannel = supabase
+      .channel('blogs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'blogs'
+        },
+        () => {
+          // Reload blogs when any change occurs
+          loadBlogs();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription when component unmounts
+    return () => {
+      supabase.removeChannel(blogsChannel);
+    };
   }, []);
 
   const loadBlogs = async () => {
@@ -49,17 +71,17 @@ export function Blogs({ onNavigate }: BlogsProps) {
   const formatContent = (content: string) => {
     return content.split('\n').map((paragraph, index) => {
       if (paragraph.startsWith('# ')) {
-        return <h2 key={index} className="text-2xl font-bold text-gray-900 mt-8 mb-4">{paragraph.slice(2)}</h2>;
+        return <h1 key={index} className="text-3xl font-bold mt-8 mb-4">{paragraph.slice(2)}</h1>;
       } else if (paragraph.startsWith('## ')) {
-        return <h3 key={index} className="text-xl font-bold text-gray-900 mt-6 mb-3">{paragraph.slice(3)}</h3>;
+        return <h2 key={index} className="text-2xl font-bold mt-6 mb-3">{paragraph.slice(3)}</h2>;
       } else if (paragraph.startsWith('### ')) {
-        return <h4 key={index} className="text-lg font-semibold text-gray-900 mt-4 mb-2">{paragraph.slice(4)}</h4>;
+        return <h3 key={index} className="text-xl font-bold mt-4 mb-2">{paragraph.slice(4)}</h3>;
       } else if (paragraph.startsWith('- ')) {
-        return <li key={index} className="ml-6 text-gray-700 leading-relaxed">{paragraph.slice(2)}</li>;
+        return <li key={index} className="ml-6 mb-2">{paragraph.slice(2)}</li>;
       } else if (paragraph.trim() === '') {
-        return <div key={index} className="h-4"></div>;
+        return <br key={index} />;
       } else {
-        return <p key={index} className="text-gray-700 leading-relaxed mb-4">{paragraph}</p>;
+        return <p key={index} className="mb-4 leading-relaxed">{paragraph}</p>;
       }
     });
   };
@@ -68,8 +90,8 @@ export function Blogs({ onNavigate }: BlogsProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading trending blogs...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading trending blogs...</p>
         </div>
       </div>
     );
@@ -78,28 +100,28 @@ export function Blogs({ onNavigate }: BlogsProps) {
   if (selectedBlog) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <button
             onClick={() => setSelectedBlog(null)}
             className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 mb-6 transition-colors"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft className="h-5 w-5" />
             <span>Back to blogs</span>
           </button>
 
-          <article className="bg-white rounded-lg shadow-sm">
+          <article className="bg-white rounded-lg shadow-sm overflow-hidden">
             {selectedBlog.cover_image && (
               <img
                 src={selectedBlog.cover_image}
                 alt={selectedBlog.title}
-                className="w-full h-64 md:h-96 object-cover rounded-t-lg"
+                className="w-full h-96 object-cover"
               />
             )}
 
             <div className="p-8">
               <div className="flex items-center space-x-2 mb-4">
-                <TrendingUp size={20} className="text-orange-500" />
-                <span className="text-sm font-semibold text-orange-500 uppercase">
+                <TrendingUp className="h-5 w-5 text-orange-500" />
+                <span className="text-sm font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
                   Trending
                 </span>
               </div>
@@ -108,44 +130,44 @@ export function Blogs({ onNavigate }: BlogsProps) {
                 {selectedBlog.title}
               </h1>
 
-              <div className="flex items-center space-x-6 pb-6 border-b border-gray-200 mb-8">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
+              <div className="flex items-center justify-between mb-8 pb-8 border-b">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
                       {selectedBlog.author.charAt(0)}
-                    </span>
+                    </div>
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{selectedBlog.author}</div>
-                    <div className="text-sm text-gray-500 flex items-center space-x-1">
-                      <Calendar size={14} />
-                      <span>{formatDate(selectedBlog.published_at)}</span>
+                    <p className="font-medium text-gray-900">{selectedBlog.author}</p>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {formatDate(selectedBlog.published_at)}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Clock size={16} />
-                    <span>{selectedBlog.reading_time} min</span>
+                <div className="flex items-center space-x-6 text-sm text-gray-500">
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    {selectedBlog.reading_time} min
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Eye size={16} />
-                    <span>{selectedBlog.views.toLocaleString()}</span>
+                  <div className="flex items-center">
+                    <Eye className="h-4 w-4 mr-1" />
+                    {selectedBlog.views.toLocaleString()}
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <ThumbsUp size={16} />
-                    <span>{selectedBlog.likes.toLocaleString()}</span>
+                  <div className="flex items-center">
+                    <ThumbsUp className="h-4 w-4 mr-1" />
+                    {selectedBlog.likes.toLocaleString()}
                   </div>
                 </div>
               </div>
 
-              <div className="prose prose-lg max-w-none mb-8">
+              <div className="prose prose-lg max-w-none">
                 {formatContent(selectedBlog.content)}
               </div>
 
               {selectedBlog.tags.length > 0 && (
-                <div className="pt-6 border-t border-gray-200">
+                <div className="mt-8 pt-8 border-t">
                   <div className="flex flex-wrap gap-2">
                     {selectedBlog.tags.map((tag, index) => (
                       <span
@@ -167,98 +189,98 @@ export function Blogs({ onNavigate }: BlogsProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-br from-orange-500 to-red-500 text-white py-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center space-x-2 mb-4">
-            <TrendingUp size={32} />
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <TrendingUp className="h-8 w-8" />
             <h1 className="text-4xl font-bold">Trending Agile Blogs</h1>
           </div>
-          <p className="text-xl text-orange-100">
+          <p className="text-xl text-blue-100">
             Stay updated with the latest insights, trends, and best practices in Agile methodology
           </p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {blogs.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500 text-lg">
+          <div className="text-center py-12">
+            <p className="text-gray-500">
               No blog posts available yet. Check back soon!
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {blogs.map((blog, index) => (
-              <article
+              <div
                 key={blog.id}
                 onClick={() => setSelectedBlog(blog)}
                 className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
               >
-                <div className="md:flex">
+                <div className="relative">
                   {blog.cover_image && (
-                    <div className="md:w-1/3">
+                    <div className="h-48 overflow-hidden">
                       <img
                         src={blog.cover_image}
                         alt={blog.title}
-                        className="w-full h-48 md:h-full object-cover"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                   )}
-                  <div className="p-6 md:flex-1">
+                  <div className="p-6">
                     {index < 3 && (
                       <div className="flex items-center space-x-2 mb-3">
-                        <TrendingUp size={18} className="text-orange-500" />
-                        <span className="text-sm font-semibold text-orange-500 uppercase">
+                        <TrendingUp className="h-4 w-4 text-orange-500" />
+                        <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
                           Trending #{index + 1}
                         </span>
                       </div>
                     )}
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-3 hover:text-blue-600 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
                       {blog.title}
-                    </h2>
+                    </h3>
 
-                    <p className="text-gray-600 mb-4 line-clamp-2">
+                    <p className="text-gray-600 mb-4 line-clamp-3">
                       {blog.excerpt}
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold text-xs">
-                            {blog.author.charAt(0)}
-                          </span>
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                          {blog.author.charAt(0)}
                         </div>
-                        <span className="font-medium">{blog.author}</span>
                       </div>
+                      <span className="text-sm font-medium text-gray-700">{blog.author}</span>
+                    </div>
 
-                      <div className="flex items-center space-x-1">
-                        <Calendar size={16} />
-                        <span>{formatDate(blog.published_at)}</span>
-                      </div>
+                    <div className="flex items-center text-xs text-gray-500 space-x-4 mb-3">
+                      <span className="flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {formatDate(blog.published_at)}
+                      </span>
 
-                      <div className="flex items-center space-x-1">
-                        <Clock size={16} />
-                        <span>{blog.reading_time} min read</span>
-                      </div>
+                      <span className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {blog.reading_time} min read
+                      </span>
 
-                      <div className="flex items-center space-x-1">
-                        <Eye size={16} />
-                        <span>{blog.views.toLocaleString()} views</span>
-                      </div>
+                      <span className="flex items-center">
+                        <Eye className="h-3 w-3 mr-1" />
+                        {blog.views.toLocaleString()} views
+                      </span>
 
-                      <div className="flex items-center space-x-1">
-                        <ThumbsUp size={16} />
-                        <span>{blog.likes.toLocaleString()} likes</span>
-                      </div>
+                      <span className="flex items-center">
+                        <ThumbsUp className="h-3 w-3 mr-1" />
+                        {blog.likes.toLocaleString()} likes
+                      </span>
                     </div>
 
                     {blog.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="flex flex-wrap gap-2">
                         {blog.tags.slice(0, 4).map((tag, tagIndex) => (
                           <span
                             key={tagIndex}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                            className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
                           >
                             {tag}
                           </span>
@@ -267,7 +289,7 @@ export function Blogs({ onNavigate }: BlogsProps) {
                     )}
                   </div>
                 </div>
-              </article>
+              </div>
             ))}
           </div>
         )}
