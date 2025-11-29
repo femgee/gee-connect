@@ -84,21 +84,32 @@ export function KnowledgeBase({ onSearchClick, isSearchOpen, onSearchClose, onNa
     }
   };
 
-  const loadArticles = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .order('order_index', { ascending: true });
+ const loadArticles = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('order_index', { ascending: true });
 
-      if (error) throw error;
-      if (data) {
-        setArticles(data);
-      }
-    } catch (error) {
-      console.error('Error loading articles:', error);
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
     }
-  };
+    
+    console.log('=== ARTICLES DEBUG ===');
+    console.log('Total articles fetched:', data?.length);
+    console.log('Article IDs:', data?.map(a => a.id));
+    console.log('Article titles:', data?.map(a => a.title));
+    console.log('Full data:', data);
+    console.log('======================');
+    
+    if (data) {
+      setArticles(data);
+    }
+  } catch (error) {
+    console.error('Error loading articles:', error);
+  }
+};
 
   const loadData = async () => {
     try {
