@@ -1,4 +1,5 @@
 import * as Icons from 'lucide-react';
+import { X } from 'lucide-react';
 import type { Database } from '../lib/database.types';
 
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -7,10 +8,17 @@ interface SidebarProps {
   categories: Category[];
   selectedCategory: string | null;
   onCategorySelect: (categoryId: string | null) => void;
-  isOpen: boolean;
+  isMobileMenuOpen: boolean;
+  onMobileMenuToggle: () => void;
 }
 
-export function Sidebar({ categories, selectedCategory, onCategorySelect, isOpen }: SidebarProps) {
+export function Sidebar({ 
+  categories, 
+  selectedCategory, 
+  onCategorySelect, 
+  isMobileMenuOpen,
+  onMobileMenuToggle 
+}: SidebarProps) {
   const getIcon = (iconName: string) => {
     const Icon = (Icons as any)[iconName] || Icons.BookOpen;
     return Icon;
@@ -18,24 +26,39 @@ export function Sidebar({ categories, selectedCategory, onCategorySelect, isOpen
 
   return (
     <>
-      {isOpen && (
+      {/* Mobile overlay */}
+      {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => onCategorySelect(null)}
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={onMobileMenuToggle}
         />
       )}
 
+      {/* Sidebar */}
       <aside
         className={`
-          fixed lg:sticky top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200
-          transform transition-transform duration-300 ease-in-out z-40
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          overflow-y-auto
+          fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out overflow-y-auto
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0 lg:z-30
         `}
       >
-        <nav className="p-4 space-y-1">
+        {/* Mobile close button */}
+        <div className="lg:hidden flex justify-end p-4">
           <button
-            onClick={() => onCategorySelect(null)}
+            onClick={onMobileMenuToggle}
+            className="p-2 rounded-lg hover:bg-gray-100"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <nav className="p-4 space-y-2">
+          {/* All Topics button */}
+          <button
+            onClick={() => {
+              onCategorySelect(null);
+              onMobileMenuToggle();
+            }}
             className={`
               w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all
               ${!selectedCategory
@@ -44,22 +67,27 @@ export function Sidebar({ categories, selectedCategory, onCategorySelect, isOpen
               }
             `}
           >
-            <Icons.Home size={20} />
+            <Icons.Home className="h-5 w-5" />
             <span>All Topics</span>
           </button>
 
+          {/* Categories header */}
           <div className="pt-4 pb-2 px-4">
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Categories
-            </h2>
+            </h3>
           </div>
 
+          {/* Category buttons */}
           {categories.map((category) => {
             const Icon = getIcon(category.icon);
             return (
               <button
                 key={category.id}
-                onClick={() => onCategorySelect(category.id)}
+                onClick={() => {
+                  onCategorySelect(category.id);
+                  onMobileMenuToggle();
+                }}
                 className={`
                   w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all
                   ${selectedCategory === category.id
@@ -68,7 +96,7 @@ export function Sidebar({ categories, selectedCategory, onCategorySelect, isOpen
                   }
                 `}
               >
-                <Icon size={20} />
+                <Icon className="h-5 w-5 flex-shrink-0" />
                 <span>{category.name}</span>
               </button>
             );
