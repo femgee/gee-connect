@@ -27,28 +27,83 @@ export function KnowledgeBase({ onSearchClick, isSearchOpen, onSearchClose, onNa
 
   useEffect(() => {
     loadData();
+    
+    // Set up real-time subscriptions
+    const articlesChannel = supabase
+      .channel('articles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'articles'
+        },
+        () => {
+          // Reload articles when any change occurs
+          loadArticles();
+        }
+      )
+      .subscribe();
+
+    const categoriesChannel = supabase
+      .channel('categories-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'categories'
+        },
+        () => {
+          // Reload categories when any change occurs
+          loadCategories();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscriptions when component unmounts
+    return () => {
+      supabase.removeChannel(articlesChannel);
+      supabase.removeChannel(categoriesChannel);
+    };
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadArticles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        setArticles(data);
+      }
+    } catch (error) {
+      console.error('Error loading articles:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
-      const [categoriesResponse, articlesResponse] = await Promise.all([
-        supabase
-          .from('categories')
-          .select('*')
-          .order('order_index', { ascending: true }),
-        supabase
-          .from('articles')
-          .select('*')
-          .order('order_index', { ascending: true })
-      ]);
-
-      if (categoriesResponse.data) {
-        setCategories(categoriesResponse.data);
-      }
-
-      if (articlesResponse.data) {
-        setArticles(articlesResponse.data);
-      }
+      setIsLoading(true);
+      await Promise.all([loadCategories(), loadArticles()]);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -80,8 +135,8 @@ export function KnowledgeBase({ onSearchClick, isSearchOpen, onSearchClose, onNa
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading knowledge base...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading knowledge base...</p>
         </div>
       </div>
     );
@@ -89,15 +144,16 @@ export function KnowledgeBase({ onSearchClick, isSearchOpen, onSearchClose, onNa
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <Sidebar
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategorySelect={handleCategorySelect}
-          isOpen={isMobileMenuOpen}
-        />
+      <Sidebar
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onCategorySelect={handleCategorySelect}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-64">
+      <main className="lg:ml-64 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {selectedArticle ? (
             <ArticleView
               article={selectedArticle}
@@ -107,11 +163,11 @@ export function KnowledgeBase({ onSearchClick, isSearchOpen, onSearchClose, onNa
           ) : (
             <div>
               <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
                   {selectedCategory
                     ? categories.find(cat => cat.id === selectedCategory)?.name
                     : 'All Topics'}
-                </h2>
+                </h1>
                 {selectedCategory && (
                   <p className="text-gray-600">
                     {categories.find(cat => cat.id === selectedCategory)?.description}
@@ -120,17 +176,18 @@ export function KnowledgeBase({ onSearchClick, isSearchOpen, onSearchClose, onNa
               </div>
 
               {filteredArticles.length === 0 ? (
-                <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
-                  <p className="text-gray-500 text-lg">
+                <div className="text-center py-12">
+                  <p className="text-gray-500">
                     No articles available yet. Check back soon!
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {filteredArticles.map((article) => (
                     <ArticleCard
                       key={article.id}
                       article={article}
+                      categoryName={getCategoryName(article.category_id)}
                       onClick={() => handleArticleSelect(article)}
                     />
                   ))}
@@ -138,13 +195,14 @@ export function KnowledgeBase({ onSearchClick, isSearchOpen, onSearchClose, onNa
               )}
             </div>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
 
       <SearchModal
         isOpen={isSearchOpen}
         onClose={onSearchClose}
         articles={articles}
+        categories={categories}
         onArticleSelect={handleArticleSelect}
       />
 

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Header } from './components/Header';
-import { ScrollToTop } from './components/ScrollToTop';
 import { Home } from './pages/Home';
 import { About } from './pages/About';
 import { KnowledgeBase } from './pages/KnowledgeBase';
@@ -48,7 +47,6 @@ function App() {
         onNavigate={handleNavigate}
       />
       {renderPage()}
-      <ScrollToTop />
     </div>
   );
 }

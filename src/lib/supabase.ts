@@ -1,7 +1,74 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './database.types';
+import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2.33.0';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY as string;
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables.');
+}
+
+// Initialize the Supabase client
+const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Define the Article type
+type Article = {
+  id: string;
+  title: string;
+  content: string | null;
+  published: boolean;
+  created_at: string;
+};
+
+// Fetch logic
+export const fetchArticles = async (): Promise<Article[]> => {
+  const { data, error } = await supabase
+    .from('articles')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  
+  if (error) {
+    console.error('Supabase fetch error:', error);
+    throw error;
+  }
+  
+  return data ?? [];
+};
+
+// Real-time subscription function
+export const subscribeToArticles = (
+  onUpdate: (articles: Article[]) => void,
+  onError?: (error: any) => void
+) => {
+  // Initial fetch
+  fetchArticles()
+    .then(onUpdate)
+    .catch(onError || console.error);
+  
+  // Subscribe to real-time changes
+  const channel = supabase
+    .channel('articles-channel')
+    .on(
+      'postgres_changes',
+      {
+        event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'articles'
+      },
+      () => {
+        // When any change happens, refetch all articles
+        fetchArticles()
+          .then(onUpdate)
+          .catch(onError || console.error);
+      }
+    )
+    .subscribe();
+  
+  // Return unsubscribe function
+  return () => {
+    supabase.removeChannel(channel);
+  };
+};
+
+export { supabase };
+export type { Article };
