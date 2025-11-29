@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL as string;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY as string;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables.');
@@ -51,12 +51,11 @@ export const subscribeToArticles = (
     .on(
       'postgres_changes',
       {
-        event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+        event: '*',
         schema: 'public',
         table: 'articles'
       },
       () => {
-        // When any change happens, refetch all articles
         fetchArticles()
           .then(onUpdate)
           .catch(onError || console.error);
@@ -64,7 +63,6 @@ export const subscribeToArticles = (
     )
     .subscribe();
   
-  // Return unsubscribe function
   return () => {
     supabase.removeChannel(channel);
   };
